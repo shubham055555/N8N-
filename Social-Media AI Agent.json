@@ -1,0 +1,436 @@
+{
+  "name": "Social-Media AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1thFHHUcTtm0PXy8ATW0Nx4cpPDQ9x_N8l8BLuwn6_Cg",
+          "mode": "list",
+          "cachedResultName": "Social Media Sheet ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1thFHHUcTtm0PXy8ATW0Nx4cpPDQ9x_N8l8BLuwn6_Cg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1thFHHUcTtm0PXy8ATW0Nx4cpPDQ9x_N8l8BLuwn6_Cg/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -80
+      ],
+      "id": "60f964b7-1bd2-4acb-8359-6ff3f95636ef",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "OTSLpqim8CeIGtcO",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "llama3",
+          "mode": "id"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=write a Short one line  \nTopic: {{ $json['Topic '] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "276563d9-86eb-4b7e-ace3-81e77c8f7a35",
+      "name": "Message a model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "IKpgDwp2j0ekC0Xt",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://picsum.photos/seed/{{ $json.content }}/512/512",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        768,
+        -96
+      ],
+      "id": "395e2224-4e63-4689-a88f-562d6421c023",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Google Sheets Trigger').item.json['Publish Date '] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        976,
+        -96
+      ],
+      "id": "06a432ce-6987-4096-80db-9769d4dbf478",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "uAbwsB6gaAuefvGL",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "new-channel"
+        },
+        "message": "=here is the linkedin post  {{ $('If').item.json['Publish Date '] }}:\n{{ $('HTTP Request').item.json.content }}\n\nalso image here {{ $json.webViewLink }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1184,
+        -96
+      ],
+      "id": "457db763-8f87-4b28-8077-5c2b09930777",
+      "name": "Send message and wait for response",
+      "webhookId": "1ffd79ef-c0cf-4311-ba26-e20e8df5c4ee",
+      "credentials": {
+        "slackApi": {
+          "id": "w1MpEAiGNQuc4RZJ",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8eb1aacf-4200-4829-8b04-047dfe6ec67c",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1392,
+        -96
+      ],
+      "id": "14fef06d-d6b8-4042-a60c-05d1d10f9207",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#new-channel",
+          "mode": "name"
+        },
+        "text": "The post has been Published ",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1696,
+        -272
+      ],
+      "id": "d2fda0e2-d3ed-4f19-b205-afc5ac3d018c",
+      "name": "Send a message",
+      "webhookId": "99051d4c-43cd-4786-abf8-d9ff5641b85e",
+      "credentials": {
+        "slackApi": {
+          "id": "w1MpEAiGNQuc4RZJ",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1thFHHUcTtm0PXy8ATW0Nx4cpPDQ9x_N8l8BLuwn6_Cg/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1thFHHUcTtm0PXy8ATW0Nx4cpPDQ9x_N8l8BLuwn6_Cg/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Publish Date ": "={{ $('Google Sheets Trigger').item.json['Publish Date '] }}",
+            "Status ": "Published"
+          },
+          "matchingColumns": [
+            "Publish Date "
+          ],
+          "schema": [
+            {
+              "id": "Publish Date ",
+              "displayName": "Publish Date ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Topic ",
+              "displayName": "Topic ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status ",
+              "displayName": "Status ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1712,
+        240
+      ],
+      "id": "6be02c89-7d47-4707-9c3c-88996f837471",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "UGOBWZX4iVMKiUgA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "422f809e-ccf5-40ef-844f-8cd27a3ce8d3",
+              "leftValue": "={{ $json['Status '] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        -80
+      ],
+      "id": "af7a4ee9-7527-47f3-909b-08c9d982b618",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b8240607-2519-4a63-8ab5-d01ac0eab710",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1798b12ac81d75507801de3455ae72421e876ac2f4bd5a4455e9e00f468538ba"
+  },
+  "id": "5Pa0EdZ54FXZvR67",
+  "tags": [
+    {
+      "updatedAt": "2026-03-25T20:06:54.488Z",
+      "createdAt": "2026-03-25T20:06:54.488Z",
+      "id": "O3x6BRXrJfB8BCzL",
+      "name": "Ai-Agent-Social"
+    }
+  ]
+}
